@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator Link Undangan — Arfan &amp; Ofri</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  /* ====== Halaman khusus mempelai, tidak untuk tamu ====== */
+  body{overflow-x:hidden;overflow-y:auto;height:auto}
+  .gen-wrap{
+    min-height:100vh;padding:60px 20px 80px;
+    display:flex;align-items:flex-start;justify-content:center;
+  }
+  .gen-card{
+    width:100%;max-width:480px;background:#fff;border:1px solid var(--line-light);
+    border-radius:14px;padding:34px 26px 30px;box-shadow:var(--shadow);
+  }
+  .gen-eyebrow{text-align:center;font-size:13px;letter-spacing:4px;text-transform:uppercase;color:var(--gray-dim)}
+  .gen-title{text-align:center;font-family:'Playfair Display',serif;font-size:30px;margin:6px 0 4px}
+  .gen-sub{text-align:center;font-size:15px;color:var(--gray-dim);margin-bottom:26px;line-height:1.6}
+  .gen-field{margin-bottom:16px}
+  .gen-field label{display:block;font-size:13px;letter-spacing:.5px;color:var(--ink);margin-bottom:6px;font-weight:600}
+  .gen-field input, .gen-field textarea{
+    width:100%;padding:12px 14px;border:1px solid var(--line-light);border-radius:8px;
+    font-family:'Cormorant Garamond',serif;font-size:17px;background:var(--offwhite);color:var(--ink);
+  }
+  .gen-field small{display:block;margin-top:5px;color:var(--gray-dim);font-size:12.5px}
+  .gen-divider{height:1px;background:var(--line-light);margin:24px 0}
+
+  .gen-result{
+    background:var(--offwhite);border:1px dashed var(--gray-mid);border-radius:10px;
+    padding:16px;margin-bottom:18px;display:none;
+  }
+  .gen-result.show{display:block;animation:fadeUp .5s var(--ease) both}
+  .gen-result-label{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--gray-dim);margin-bottom:8px}
+  .gen-link-row{display:flex;gap:8px;align-items:center}
+  .gen-link-box{
+    flex:1;padding:10px 12px;background:#fff;border:1px solid var(--line-light);border-radius:6px;
+    font-family:'Courier New',monospace;font-size:13px;color:var(--ink);
+    overflow-x:auto;white-space:nowrap;
+  }
+  .gen-btn-copy{
+    flex-shrink:0;background:var(--black);color:#fff;border:none;padding:10px 16px;border-radius:6px;
+    font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;cursor:pointer;transition:.3s;white-space:nowrap;
+  }
+  .gen-btn-copy:hover{background:#2b2b28}
+  .gen-btn-copy.copied{background:#3a7d44}
+
+  .gen-preview-link{
+    display:block;text-align:center;margin-top:10px;font-size:13px;color:var(--gray-dim);text-decoration:underline;
+  }
+
+  .gen-share-row{display:flex;gap:12px;margin-top:18px}
+  .gen-share-btn{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+    padding:13px 10px;border-radius:8px;border:none;cursor:pointer;
+    font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;letter-spacing:.3px;
+    color:#fff;transition:transform .25s var(--ease),box-shadow .25s;
+  }
+  .gen-share-btn:hover{transform:translateY(-2px)}
+  .gen-share-btn svg{width:19px;height:19px;flex-shrink:0}
+  .gen-share-wa{background:#25D366}
+  .gen-share-ig{background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af,#515bd4)}
+
+  .gen-btn-generate{
+    width:100%;background:var(--black);color:#fff;border:none;padding:14px;border-radius:8px;
+    font-family:'Playfair Display',serif;letter-spacing:1px;font-size:16px;cursor:pointer;transition:.3s;
+  }
+  .gen-btn-generate:hover{background:#2b2b28}
+
+  .gen-history{margin-top:10px}
+  .gen-history-title{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--gray-dim);margin-bottom:10px}
+  .gen-history-item{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:10px 12px;border-bottom:1px solid var(--line-light);font-size:15px;
+  }
+  .gen-history-item:last-child{border-bottom:none}
+  .gen-history-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gen-history-actions{display:flex;gap:6px;flex-shrink:0}
+  .gen-history-actions button{
+    background:none;border:1px solid var(--line-light);border-radius:5px;padding:5px 9px;
+    font-size:12px;cursor:pointer;color:var(--ink);font-family:'Cormorant Garamond',serif;transition:.2s;
+  }
+  .gen-history-actions button:hover{background:var(--black);color:#fff;border-color:var(--black)}
+  .gen-history-empty{color:var(--gray-dim);font-size:14px;font-style:italic;text-align:center;padding:10px 0}
+
+  .gen-toast{
+    position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+    background:var(--black);color:#fff;padding:12px 20px;border-radius:30px;font-size:14px;
+    opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:999;box-shadow:var(--shadow);
+    white-space:nowrap;
+  }
+  .gen-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .gen-back{display:block;text-align:center;margin-top:22px;font-size:13px;color:var(--gray-dim);letter-spacing:.5px}
+  .gen-back:hover{color:var(--ink)}
+
+  @media(max-width:400px){
+    .gen-card{padding:26px 18px 24px}
+    .gen-share-row{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+
+<div class="gen-wrap">
+  <div class="gen-card">
+    <div class="gen-eyebrow">Khusus Mempelai</div>
+    <div class="gen-title">Generator Link Undangan</div>
+    <div class="gen-sub">Tulis nama tamu, link undangan otomatis dibuat lengkap dengan<br>nama tamu di dalamnya. Salin atau bagikan langsung ke WhatsApp &amp; Instagram.</div>
+
+    <div class="gen-field">
+      <label for="gen-nama">Nama Tamu</label>
+      <input type="text" id="gen-nama" placeholder="Contoh: Bapak Yohanes &amp; Keluarga" autocomplete="off">
+      <small>Link akan otomatis terisi begitu Anda mengetik.</small>
+    </div>
+
+    <div class="gen-field">
+      <label for="gen-base">Alamat Undangan (Base URL)</label>
+      <input type="text" id="gen-base" placeholder="https://namadomain.com/index.html">
+      <small>Terisi otomatis dari alamat halaman ini. Ubah jika undangan di-hosting di domain lain.</small>
+    </div>
+
+    <div class="gen-result" id="gen-result">
+      <div class="gen-result-label">Link Undangan Untuk Tamu Ini</div>
+      <div class="gen-link-row">
+        <div class="gen-link-box" id="gen-link-text"></div>
+        <button class="gen-btn-copy" id="gen-btn-copy">Salin Link</button>
+      </div>
+      <a href="#" target="_blank" rel="noopener" class="gen-preview-link" id="gen-preview-link">Buka pratinjau undangan &rarr;</a>
+
+      <div class="gen-share-row">
+        <button class="gen-share-btn gen-share-wa" id="gen-share-wa">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3a9 9 0 0 0-7.8 13.4L3 21l4.7-1.2A9 9 0 1 0 12 3Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.6 8.4c.2-.5.4-.5.7-.5h.5c.2 0 .4 0 .6.4.2.5.7 1.6.7 1.7.1.1.1.3 0 .4-.1.2-.2.3-.3.4l-.4.5c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.6-.7c.2-.2.4-.2.6-.1l1.5.7c.2.1.4.2.4.4.1.5-.1 1-.4 1.4-.3.4-.9.7-1.4.7-.9.1-1.7-.2-3.2-.9-2.3-1-3.7-3.2-3.9-3.4-.1-.2-1-1.3-1-2.5 0-1.2.6-1.8.8-2.1Z" fill="#fff"/></svg>
+          WhatsApp
+        </button>
+        <button class="gen-share-btn gen-share-ig" id="gen-share-ig">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="5" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="12" r="4.2" stroke="#fff" stroke-width="1.6"/><circle cx="17.4" cy="6.6" r="1.1" fill="#fff"/></svg>
+          Instagram
+        </button>
+      </div>
+    </div>
+
+    <div class="gen-divider"></div>
+
+    <div class="gen-history">
+      <div class="gen-history-title">Riwayat Nama Tamu (Tersimpan di Perangkat Ini)</div>
+      <div id="gen-history-list">
+        <div class="gen-history-empty">Belum ada nama tamu yang dibuat.</div>
+      </div>
+    </div>
+
+    <a href="index.html" class="gen-back">&larr; Lihat Tampilan Undangan</a>
+  </div>
+</div>
+
+<div class="gen-toast" id="gen-toast"></div>
+
+<script>
+(function(){
+  const inputNama   = document.getElementById('gen-nama');
+  const inputBase   = document.getElementById('gen-base');
+  const result      = document.getElementById('gen-result');
+  const linkText    = document.getElementById('gen-link-text');
+  const previewLink = document.getElementById('gen-preview-link');
+  const btnCopy     = document.getElementById('gen-btn-copy');
+  const btnWA       = document.getElementById('gen-share-wa');
+  const btnIG       = document.getElementById('gen-share-ig');
+  const historyList = document.getElementById('gen-history-list');
+  const toast       = document.getElementById('gen-toast');
+
+  const STORAGE_KEY = 'undangan_arfan_ofri_guest_history';
+
+  /* ====== Tentukan base URL otomatis dari lokasi file generator.html ====== */
+  function defaultBaseUrl(){
+    // ganti "generator.html" (dan query/hash apa pun) dengan "index.html"
+    const loc = window.location.href.split(/[?#]/)[0];
+    return loc.replace(/generator\.html$/i, 'index.html');
+  }
+  inputBase.value = defaultBaseUrl();
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toast.classList.remove('show'), 2200);
+  }
+
+  function buildLink(){
+    const nama = inputNama.value.trim();
+    let base = inputBase.value.trim() || defaultBaseUrl();
+    if(!nama) return null;
+    // Pastikan base tidak diakhiri "?" atau "/index.html/" ganda
+    base = base.replace(/\s+$/,'');
+    const separator = base.includes('?') ? '&' : '?';
+    const url = `${base}${separator}to=${encodeURIComponent(nama)}`;
+    return url;
+  }
+
+  function render(){
+    const url = buildLink();
+    if(!url){
+      result.classList.remove('show');
+      return;
+    }
+    linkText.textContent = url;
+    previewLink.href = url;
+    result.classList.add('show');
+  }
+
+  inputNama.addEventListener('input', render);
+  inputBase.addEventListener('input', render);
+
+  /* ====== Salin Link ====== */
+  btnCopy.addEventListener('click', async () => {
+    const url = buildLink();
+    if(!url) return;
+    try{
+      await navigator.clipboard.writeText(url);
+    }catch(e){
+      // fallback untuk browser lama
+      const ta = document.createElement('textarea');
+      ta.value = url; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    const original = btnCopy.textContent;
+    btnCopy.textContent = 'Tersalin!';
+    btnCopy.classList.add('copied');
+    setTimeout(() => { btnCopy.textContent = original; btnCopy.classList.remove('copied'); }, 1500);
+    saveToHistory(inputNama.value.trim());
+  });
+
+  /* ====== Bagikan via WhatsApp ====== */
+  btnWA.addEventListener('click', () => {
+    const url = buildLink();
+    const nama = inputNama.value.trim();
+    if(!url) { showToast('Isi nama tamu terlebih dahulu'); return; }
+    const pesan =
+`Kepada Yth. Bapak/Ibu/Saudara/i ${nama},
+
+Dengan penuh sukacita, kami mengundang Anda untuk hadir dalam pernikahan kami:
+
+*Arfan & Ofri*
+
+Berikut link undangan lengkap kami:
+${url}
+
+Merupakan suatu kehormatan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir dan memberikan doa restu. Terima kasih 🙏`;
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(pesan)}`;
+    window.open(waUrl, '_blank');
+    saveToHistory(nama);
+  });
+
+  /* ====== Bagikan via Instagram ======
+     Instagram tidak mendukung pengisian pesan otomatis lewat URL,
+     jadi kita salin link ke clipboard lalu buka Instagram supaya
+     mempelai tinggal tempel (paste) di DM / Story. Jika perangkat
+     mendukung Web Share API, gunakan itu agar Instagram muncul
+     langsung di daftar aplikasi berbagi. */
+  btnIG.addEventListener('click', async () => {
+    const url = buildLink();
+    const nama = inputNama.value.trim();
+    if(!url) { showToast('Isi nama tamu terlebih dahulu'); return; }
+    saveToHistory(nama);
+
+    if(navigator.share){
+      try{
+        await navigator.share({
+          title: 'Undangan Pernikahan Arfan & Ofri',
+          text: `Kepada Yth. ${nama}, kami mengundang Anda di pernikahan kami:`,
+          url: url
+        });
+        return;
+      }catch(e){ /* user membatalkan / tidak didukung, lanjut fallback di bawah */ }
+    }
+
+    try{
+      await navigator.clipboard.writeText(url);
+    }catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = url; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    showToast('Link disalin! Tempel di DM / Story Instagram Anda.');
+
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    setTimeout(() => {
+      if(isMobile){
+        window.location.href = 'instagram://direct-inbox';
+        setTimeout(() => { window.open('https://www.instagram.com/direct/inbox/', '_blank'); }, 800);
+      }else{
+        window.open('https://www.instagram.com/direct/inbox/', '_blank');
+      }
+    }, 300);
+  });
+
+  /* ====== Riwayat nama tamu (localStorage) ====== */
+  function getHistory(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch(e){ return []; }
+  }
+  function saveToHistory(nama){
+    if(!nama) return;
+    let list = getHistory().filter(n => n.toLowerCase() !== nama.toLowerCase());
+    list.unshift(nama);
+    list = list.slice(0, 25);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    renderHistory();
+  }
+  function renderHistory(){
+    const list = getHistory();
+    if(!list.length){
+      historyList.innerHTML = '<div class="gen-history-empty">Belum ada nama tamu yang dibuat.</div>';
+      return;
+    }
+    historyList.innerHTML = list.map(nama => {
+      const safe = nama.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      return `
+        <div class="gen-history-item">
+          <span class="gen-history-name">${safe}</span>
+          <div class="gen-history-actions">
+            <button data-action="use" data-nama="${safe}">Pakai</button>
+            <button data-action="del" data-nama="${safe}">Hapus</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+  historyList.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    const nama = btn.dataset.nama;
+    if(btn.dataset.action === 'use'){
+      inputNama.value = nama;
+      render();
+      window.scrollTo({top:0, behavior:'smooth'});
+    }else if(btn.dataset.action === 'del'){
+      const list = getHistory().filter(n => n !== nama);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      renderHistory();
+    }
+  });
+
+  renderHistory();
+})();
+</script>
+</body>
+</html>
